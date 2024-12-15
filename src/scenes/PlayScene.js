@@ -1,18 +1,27 @@
 ﻿import Phaser from "phaser";
+import Player from "../entities/Player";
 
 class PlayScene extends Phaser.Scene {
-    
+
     constructor() {
         super('PlayScene');
     }
-    
+
     create() {
         const map = this.createMap();
         const layers = this.createLayers(map);
+
         const player = this.createPlayer();
-        this.physics.add.collider(player, layers.platformColliders);
+        this.createPlayerColliders(player, {
+            colliders: {
+                platformColliders: layers.platformColliders
+            }
+        });
     }
-    
+
+    update() {
+    }
+
     createMap() {
         const map = this.make.tilemap({key: 'map'});
         map.addTilesetImage('main_lev_build_1', 'tileset-1');
@@ -29,10 +38,11 @@ class PlayScene extends Phaser.Scene {
     }
 
     createPlayer() {
-        const player = this.physics.add.sprite(100, 250, 'player').setOrigin(1, 0);
-        player.body.setGravityY(500);
-        player.setCollideWorldBounds(true);
-        return player;
+        return new Player(this, 100, 250);
+    }
+
+    createPlayerColliders(player, {colliders}) {
+        player.addCollider(colliders.platformColliders);
     }
 }
 
