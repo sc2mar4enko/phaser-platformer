@@ -30,9 +30,24 @@ class PlayScene extends Phaser.Scene {
         });
         this.createEndOfLevel(playerZones, player);
         this.setupFollowupCameraOn(player);
+
+        this.plotting = false;
+        this.graphics = this.add.graphics();
+        this.line = new Phaser.Geom.Line();
+        this.graphics.lineStyle(5, 0x00ff00);
+        this.input.on('pointerdown', this.startDrawing, this);
+        this.input.on('pointerup', pointer => this.finishDrawing(pointer, layers.platforms), this);
     }
 
     update() {
+        if (this.plotting) {
+            const pointer = this.input.activePointer;
+            this.line.x2 = pointer.worldX;
+            this.line.y2 = pointer.worldY;
+
+            this.graphics.clear();
+            this.graphics.strokeLineShape(this.line);
+        }
     }
 
     createMap() {
@@ -102,6 +117,42 @@ class PlayScene extends Phaser.Scene {
             endOfLevelOverlap.active = false;
             this.add.text(player.body.x + 50, player.body.y - 15, playerZones.rofl.text.text);
         })
+    }
+    
+    drawDebug(layer) {
+        const collidingTileColor = new Phaser.Display.Color(243, 134, 40);
+        layer.renderDebug(this.graphics, {tileColor: null, collidingTileColor})
+    }
+
+    startDrawing(pointer) {
+
+        if (this.tileHits && this.tileHits.length > 0) {
+            this.tileHits.forEach(tile => {
+                tile.index !== -1 && tile.setCollision(false);
+            })
+        }
+        
+        this.line.x1 = pointer.worldX;
+        this.line.y1 = pointer.worldY;
+        this.plotting = true;
+    }
+
+    finishDrawing(pointer, layer) {
+        this.line.x2 = pointer.worldX;
+        this.line.y2 = pointer.worldY;
+        this.graphics.clear();
+        this.graphics.strokeLineShape(this.line);
+
+        this.tileHits = layer.getTilesWithinShape(this.line);
+
+        if (this.tileHits.length > 0) {
+            this.tileHits.forEach(tile => {
+                tile.index !== -1 && tile.setCollision(true);
+            })
+        }
+        this.drawDebug(layer);
+
+        this.plotting = false;
     }
 }
 

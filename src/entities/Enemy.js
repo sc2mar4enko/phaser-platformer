@@ -29,15 +29,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     initEvents() {
         this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.update, this);
     }
-    
+
     update(time, delta) {
-        if (Math.floor(time / 100) % 12 >= 6) {
-            this.setVelocityX(30);
-            this.setFlipX(false);
-        }
-        else {
-            this.setVelocityX(-30);
-            this.setFlipX(true);
-        }
+        this.setVelocityX(30);
     }
 }
