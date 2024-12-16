@@ -12,8 +12,14 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('tileset-1', 'assets/main_lev_build_1.png');
         this.load.image('tileset-2', 'assets/main_lev_build_2.png');
         this.load.spritesheet('player', 'assets/player/move_sprite_1.png', {
-            frameWidth: 64,
-            frameHeight: 38
+            frameWidth: 32,
+            frameHeight: 38,
+            spacing: 32
+        });
+        this.load.spritesheet('birdman', 'assets/enemy/enemy_sheet.png', {
+            frameWidth: 32,
+            frameHeight: 64,
+            spacing: 32
         });
     }
 
