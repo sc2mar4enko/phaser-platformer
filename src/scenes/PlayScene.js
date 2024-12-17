@@ -59,7 +59,7 @@ class PlayScene extends Phaser.Scene {
     createEnemies(spawnLayer, platformColliders) {
         let enemies = new Enemies(this);
         const enemyTypes = enemies.getEnemyTypes();
-        spawnLayer.objects.forEach(spawnPoint => {
+        spawnLayer.objects.forEach((spawnPoint) => {
             const enemy = new enemyTypes[spawnPoint.type](this, spawnPoint.x, spawnPoint.y);
             enemy.setPlatformColliders(platformColliders);
             enemies.add(enemy);
@@ -119,8 +119,6 @@ class PlayScene extends Phaser.Scene {
             })
         }
         this.drawDebug(layer);
-
-        this.plotting = false;
     }
 }
 
