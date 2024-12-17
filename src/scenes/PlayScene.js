@@ -68,7 +68,7 @@ class PlayScene extends Phaser.Scene {
     }
 
     createEnemyColliders(enemies, {colliders}) {
-        enemies.addCollider(colliders.platformColliders).addCollider(colliders.player);
+        enemies.addCollider(colliders.platformColliders).addCollider(colliders.player, this.onPlayerCollision);
     }
 
     setupFollowupCameraOn(player) {
@@ -99,26 +99,9 @@ class PlayScene extends Phaser.Scene {
             this.add.text(player.body.x + 50, player.body.y - 15, playerZones.rofl.text.text);
         })
     }
-    
-    drawDebug(layer) {
-        const collidingTileColor = new Phaser.Display.Color(243, 134, 40);
-        layer.renderDebug(this.graphics, {tileColor: null, collidingTileColor});
-    }
 
-    finishDrawing(pointer, layer) {
-        this.line.x2 = pointer.worldX;
-        this.line.y2 = pointer.worldY;
-        this.graphics.clear();
-        this.graphics.strokeLineShape(this.line);
-
-        this.tileHits = layer.getTilesWithinShape(this.line);
-
-        if (this.tileHits.length > 0) {
-            this.tileHits.forEach(tile => {
-                tile.index !== -1 && tile.setCollision(true);
-            })
-        }
-        this.drawDebug(layer);
+    onPlayerCollision(enemy, player) {
+        player.takesHit(enemy);
     }
 }
 

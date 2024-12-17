@@ -20,6 +20,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.playerSpeed = 150;
         this.jumpCount = 0;
         this.consecutiveJumps = 1;
+        this.hasBeenHit = false;
+        this.bounceVelocity = 250;
         this.setOrigin(0.5, 1);
         this.body.setSize(this.width - 8, this.height - 2);
         this.body.setOffset(6, 2);
@@ -35,6 +37,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     update() {
+        if (this.hasBeenHit) return;
         const {left, right, space, up} = this.cursors;
         const isJumpButtonJustDown = Phaser.Input.Keyboard.JustDown(space) || Phaser.Input.Keyboard.JustDown(up);
         const onFloor = this.body.onFloor();
@@ -60,5 +63,43 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         onFloor ?
             this.body.velocity.x !== 0 ? this.play('run', true) : this.play('idle', true)
             : this.play('jump', true);
+    }
+
+    playDamageTween() {
+        return this.scene.tweens.add({
+            targets: this,
+            duration: 100,
+            repeat: -1,
+            tint: 0xffffff
+        })
+    }
+
+    bounceOff() {
+        this.body.touching.right ?
+            this.setVelocity(-this.bounceVelocity, -this.bounceVelocity) :
+            this.setVelocity(this.bounceVelocity, -this.bounceVelocity);
+
+        setTimeout(() => this.setVelocityY(-this.bounceVelocity), 0);
+    }
+
+    takesHit(initiator) {
+        if (this.hasBeenHit) return;
+        this.hasBeenHit = true;
+        this.bounceOff();
+        const hitAnimation = this.playDamageTween();
+
+        this.scene.time.delayedCall(1000, () => {
+            this.hasBeenHit = false;
+            hitAnimation.stop();
+            this.clearTint();
+        });
+
+        // this.scene.time.addEvent({
+        //     delay: 1000,
+        //     callback: () => {
+        //         this.hasBeenHit = false;
+        //     },
+        //     loop: false
+        // })
     }
 }

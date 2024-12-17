@@ -7,6 +7,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
+        this.config = scene.config;
+
         // Mixins
         Object.assign(this, collidable);
 
@@ -53,17 +55,17 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
             steepness: 0.5
         });
 
-        console.log(hasHit);
-
         if ((!hasHit || this.currentPatrolDistance >= this.maxPatrolDistance) && this.timeFromLastTurn + 100 < time) {
             this.setFlipX(!this.flipX);
             this.setVelocityX(this.speed = -this.speed);
             this.timeFromLastTurn = time;
             this.currentPatrolDistance = 0;
         }
-
-        this.rayGraphics.clear();
-        this.rayGraphics.strokeLineShape(ray);
+        
+        if (this.config.debug) {
+            this.rayGraphics.clear();
+            this.rayGraphics.strokeLineShape(ray);
+        }
     }
 
     setPlatformColliders(platformCollidersLayer) {
