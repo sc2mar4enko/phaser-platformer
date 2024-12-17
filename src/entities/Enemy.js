@@ -17,6 +17,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     init() {
         this.gravity = 500;
         this.speed = 150;
+
+        this.platformCollidersLayer = null;
+        this.rayGraphics = this.scene.add.graphics({lineStyle: {width: 2, color: 0xaa00aa}});
+
         this.setOrigin(0.5, 1);
         this.cursors = this.scene.input.keyboard.createCursorKeys();
         this.setImmovable();
@@ -32,5 +36,14 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     update(time, delta) {
         this.setVelocityX(30);
+        const {ray, hasHit} = this.raycast(this.body, this.platformCollidersLayer, 30, 3);
+        
+        this.rayGraphics.clear();
+        this.rayGraphics.strokeLineShape(ray);
+    }
+
+
+    setPlatformColliders(platformCollidersLayer) {
+        this.platformCollidersLayer = platformCollidersLayer;
     }
 }

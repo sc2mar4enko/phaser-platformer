@@ -1,7 +1,5 @@
 ﻿import Phaser from "phaser";
 import Player from "../entities/Player";
-import Birdman from "../entities/Birdman";
-import {getEnemyTypes} from "../types/types";
 import Enemies from "../groups/Enemies";
 
 class PlayScene extends Phaser.Scene {
@@ -16,7 +14,7 @@ class PlayScene extends Phaser.Scene {
         const layers = this.createLayers(map);
         const playerZones = this.getPlayerZones(layers.playerZones);
         const player = this.createPlayer(playerZones);
-        const enemies = this.createEnemies(layers.enemySpawns);
+        const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
         this.createPlayerColliders(player, {
             colliders: {
                 platformColliders: layers.platformColliders
@@ -30,24 +28,6 @@ class PlayScene extends Phaser.Scene {
         });
         this.createEndOfLevel(playerZones, player);
         this.setupFollowupCameraOn(player);
-
-        this.plotting = false;
-        this.graphics = this.add.graphics();
-        this.line = new Phaser.Geom.Line();
-        this.graphics.lineStyle(5, 0x00ff00);
-        this.input.on('pointerdown', this.startDrawing, this);
-        this.input.on('pointerup', pointer => this.finishDrawing(pointer, layers.platforms), this);
-    }
-
-    update() {
-        if (this.plotting) {
-            const pointer = this.input.activePointer;
-            this.line.x2 = pointer.worldX;
-            this.line.y2 = pointer.worldY;
-
-            this.graphics.clear();
-            this.graphics.strokeLineShape(this.line);
-        }
     }
 
     createMap() {
@@ -76,11 +56,12 @@ class PlayScene extends Phaser.Scene {
         player.addCollider(colliders.platformColliders);
     }
 
-    createEnemies(spawnLayer) {
+    createEnemies(spawnLayer, platformColliders) {
         let enemies = new Enemies(this);
         const enemyTypes = enemies.getEnemyTypes();
         spawnLayer.objects.forEach(spawnPoint => {
             const enemy = new enemyTypes[spawnPoint.type](this, spawnPoint.x, spawnPoint.y);
+            enemy.setPlatformColliders(platformColliders);
             enemies.add(enemy);
         })
         return enemies;
@@ -121,20 +102,7 @@ class PlayScene extends Phaser.Scene {
     
     drawDebug(layer) {
         const collidingTileColor = new Phaser.Display.Color(243, 134, 40);
-        layer.renderDebug(this.graphics, {tileColor: null, collidingTileColor})
-    }
-
-    startDrawing(pointer) {
-
-        if (this.tileHits && this.tileHits.length > 0) {
-            this.tileHits.forEach(tile => {
-                tile.index !== -1 && tile.setCollision(false);
-            })
-        }
-        
-        this.line.x1 = pointer.worldX;
-        this.line.y1 = pointer.worldY;
-        this.plotting = true;
+        layer.renderDebug(this.graphics, {tileColor: null, collidingTileColor});
     }
 
     finishDrawing(pointer, layer) {
