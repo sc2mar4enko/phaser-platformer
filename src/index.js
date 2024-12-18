@@ -12,7 +12,15 @@ let SHARED_CONFIG = {
   width: WIDTH,
   height: HEIGHT,
   zoomFactor: ZOOM_FACTOR,
-  debug: false
+  debug: false,
+  leftTopCorner: {
+    x: (WIDTH - (WIDTH / ZOOM_FACTOR)) / 2,
+    y: (HEIGHT - (HEIGHT / ZOOM_FACTOR)) / 2
+  },
+  rightTopCorner: {
+    x: ((WIDTH / ZOOM_FACTOR) + ((WIDTH / ZOOM_FACTOR)) / 2),
+    y: ((HEIGHT / ZOOM_FACTOR) + ((HEIGHT / ZOOM_FACTOR)) / 2)
+  },
 }
 
 const scenes = [PreloadScene, PlayScene];
