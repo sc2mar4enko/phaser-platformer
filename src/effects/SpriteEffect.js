@@ -1,5 +1,5 @@
 export default class SpriteEffect extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y, effectName) {
+    constructor(scene, x, y, effectName, impactPosition) {
         super(scene, x, y);
         
         scene.add.existing(this);
@@ -7,6 +7,7 @@ export default class SpriteEffect extends Phaser.Physics.Arcade.Sprite {
         
         this.target = null;
         this.effectName = effectName;
+        this.impactPosition = impactPosition;
         
         this.on('animationcomplete', (animation) => {
             if (animation.key === this.effectName) {
@@ -23,7 +24,7 @@ export default class SpriteEffect extends Phaser.Physics.Arcade.Sprite {
     placeEffect() {
         if (!this.target || !this.body) return;
         const center = this.target.getCenter();
-        this.body.reset(center.x, center.y);
+        this.body.reset(center.x, this.impactPosition.y);
     }
     
     playOn(target) {

@@ -1,4 +1,5 @@
 import collidable from "../mixins/collidable";
+import animations from "../mixins/animations";
 
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, key) {
@@ -11,6 +12,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
         // Mixins
         Object.assign(this, collidable);
+        Object.assign(this, animations);
 
         this.init();
         this.initEvents();
@@ -44,6 +46,14 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     update(time, delta) {
         this.patrol(time, delta)
+        
+        if (this.getBounds().bottom > 600) {
+            this.scene.events.removeListener(Phaser.Scenes.Events.UPDATE, this.update, this);
+            this.setActive(false);
+            this.rayGraphics.clear();
+            this.destroy();
+            return;
+        }
     }
 
     patrol(time, delta) {
@@ -78,7 +88,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.health -= source.damage;
         source.deliversHit(this);
         if (this.health <= 0) {
-            console.log('dead');
+            this.setTint(0xff0000);
+            this.setVelocity(0, -200);
+            this.body.checkCollision.none = true;
+            this.setCollideWorldBounds(false);
         }
     }
 }
