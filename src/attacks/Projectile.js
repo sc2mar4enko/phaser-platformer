@@ -1,3 +1,6 @@
+import SpriteEffect from "../effects/SpriteEffect";
+import EffectManager from "../effects/EffectManager";
+
 export default class Projectile extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, key) {
         super(scene, x, y, key)
@@ -10,6 +13,8 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
         this.travelledDistance = 0;
         this.cooldown = 500;
         this.damage = 10;
+        
+        this.effectManager = new EffectManager(this.scene);
     }
 
     preUpdate(time, delta) {
@@ -17,18 +22,28 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
         this.travelledDistance += this.body.deltaAbsX();
         if (this.isOutOfRange()) {
             this.body.reset(0, 0);
-            this.setActive(false);
-            this.setVisible(false);
+            this.activateProjectile(false);
             this.travelledDistance = 0;
         }
     }
 
     fire(x, y) {
         console.log('FIRE');
-        this.setActive(true);
-        this.setVisible(true);
+        this.activateProjectile(true);
         this.body.reset(x, y);
         this.setVelocityX(this.speed);
+    }
+
+    deliversHit(target) {
+        this.activateProjectile(false);
+        this.travelledDistance = 0;
+        this.body.reset(0,0);
+        this.effectManager.playEffectOn('hit-effect', target);
+    }
+
+    activateProjectile(isActive) {
+        this.setActive(isActive);
+        this.setVisible(isActive);
     }
     
     isOutOfRange() {
