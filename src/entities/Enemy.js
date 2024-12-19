@@ -22,6 +22,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.timeFromLastTurn = 0;
         this.maxPatrolDistance = 350;
         this.currentPatrolDistance = 0;
+        this.health = 30;
         this.damage = 20;
 
         this.platformCollidersLayer = null;
@@ -71,5 +72,15 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     setPlatformColliders(platformCollidersLayer) {
         this.platformCollidersLayer = platformCollidersLayer;
+    }
+    
+    takesHit(source) {
+        this.health -= source.damage;
+        
+        source.setActive(false);
+        source.setVisible(false);
+        if (this.health <= 0) {
+            console.log('dead');
+        }
     }
 }

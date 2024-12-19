@@ -1,4 +1,5 @@
 import Projectile from "./Projectile";
+import {getTimestamp} from "../utils/functions";
 
 export default class Projectiles extends Phaser.Physics.Arcade.Group {
     constructor(scene) {
@@ -10,14 +11,31 @@ export default class Projectiles extends Phaser.Physics.Arcade.Group {
             visible: false,
             key: 'iceball',
             classType: Projectile
-        })
+        });
+        
+        this.timeFromLastShot = null;
     }
     
     fireProjectile(initiator) {
         const projectile = this.getFirstDead(false);
         
         if (!projectile) return;
+        if (this.timeFromLastShot && this.timeFromLastShot + projectile.cooldown > getTimestamp()) return;
         
-        projectile.fire(initiator.x, initiator.y);
+        const center = initiator.getCenter();
+        let centerX;
+        
+        if (initiator.lastDirection === Phaser.Physics.Arcade.FACING_RIGHT) {
+            projectile.speed = Math.abs(projectile.speed);
+            projectile.setFlipX(false);
+            centerX = center.x + 10
+        } else {
+            projectile.speed = -Math.abs(projectile.speed);
+            projectile.setFlipX(true);
+            centerX = center.x - 10;
+        }
+        
+        projectile.fire(centerX, center.y);
+        this.timeFromLastShot = getTimestamp();
     }
 }

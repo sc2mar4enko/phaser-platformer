@@ -1,8 +1,8 @@
 import initAnimations from "../animations/playerAnimations";
 import collidable from "../mixins/collidable";
 import Healthbar from "../hud/Healthbar";
-import Projectile from "../attacks/Projectile";
 import Projectiles from "../attacks/Projectiles";
+import animations from "../mixins/animations";
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
@@ -13,6 +13,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         // Mixins
         Object.assign(this, collidable);
+        Object.assign(this, animations);
 
         this.init();
         this.initEvents();
@@ -29,6 +30,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.setSize(this.width - 8, this.height - 2);
         this.body.setOffset(6, 2);
         this.cursors = this.scene.input.keyboard.createCursorKeys();
+        this.lastDirection = Phaser.Physics.Arcade.FACING_RIGHT;
         
         this.projectiles = new Projectiles(this.scene);
         
@@ -40,6 +42,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         initAnimations(this.scene.anims);
         
         this.scene.input.keyboard.on('keydown-Q', () => {
+            this.play('throw', true);
             this.projectiles.fireProjectile(this);
         })
     }
@@ -55,9 +58,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         const onFloor = this.body.onFloor();
 
         if (left.isDown) {
+            this.lastDirection = Phaser.Physics.Arcade.FACING_LEFT;
             this.setVelocityX(-this.playerSpeed);
             this.setFlipX(true);
         } else if (right.isDown) {
+            this.lastDirection = Phaser.Physics.Arcade.FACING_RIGHT;
             this.setVelocityX(this.playerSpeed);
             this.setFlipX(false);
         } else {
@@ -71,7 +76,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         if (onFloor)
             this.jumpCount = 0;
-
+        
+        if (this.isPlayingAnimations('throw'))
+            return;
+        
         onFloor ?
             this.body.velocity.x !== 0 ? this.play('run', true) : this.play('idle', true)
             : this.play('jump', true);
