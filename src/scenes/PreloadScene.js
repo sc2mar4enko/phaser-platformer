@@ -11,6 +11,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.tilemapTiledJSON('map', 'assets/map.json');
         this.load.image('tileset-1', 'assets/main_lev_build_1.png');
         this.load.image('tileset-2', 'assets/main_lev_build_2.png');
+        this.load.image('iceball', 'assets/weapons/iceball_001.png');
         this.load.spritesheet('player', 'assets/player/move_sprite_1.png', {
             frameWidth: 32,
             frameHeight: 38,

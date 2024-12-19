@@ -1,6 +1,8 @@
 import initAnimations from "../animations/playerAnimations";
 import collidable from "../mixins/collidable";
 import Healthbar from "../hud/Healthbar";
+import Projectile from "../attacks/Projectile";
+import Projectiles from "../attacks/Projectiles";
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
@@ -28,12 +30,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.setOffset(6, 2);
         this.cursors = this.scene.input.keyboard.createCursorKeys();
         
+        this.projectiles = new Projectiles(this.scene);
+        
         this.health = 100;
         this.hp = new Healthbar(this.scene, this.scene.config.leftTopCorner.x + 5, this.scene.config.leftTopCorner.y + 5, this.health, 1.5);
         
         this.body.setGravityY(this.gravity);
         this.setCollideWorldBounds(true);
         initAnimations(this.scene.anims);
+        
+        this.scene.input.keyboard.on('keydown-Q', () => {
+            this.projectiles.fireProjectile(this);
+        })
     }
 
     initEvents() {
