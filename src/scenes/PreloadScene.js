@@ -22,6 +22,12 @@ class PreloadScene extends Phaser.Scene {
             frameHeight: 64,
             spacing: 32
         });
+        
+        this.load.spritesheet('snakey', 'assets/enemy/enemy_sheet_2.png', {
+            frameWidth: 32,
+            frameHeight: 64,
+            spacing: 32
+        });
         this.load.spritesheet('player-throw', 'assets/player/throw_attack_sheet_1.png', {
             frameWidth: 32,
             frameHeight: 38,

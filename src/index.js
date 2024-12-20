@@ -12,7 +12,7 @@ let SHARED_CONFIG = {
   width: WIDTH,
   height: HEIGHT,
   zoomFactor: ZOOM_FACTOR,
-  debug: false,
+  debug: true,
   leftTopCorner: {
     x: (WIDTH - (WIDTH / ZOOM_FACTOR)) / 2,
     y: (HEIGHT - (HEIGHT / ZOOM_FACTOR)) / 2
