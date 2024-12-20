@@ -27,35 +27,27 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.jumpCount = 0;
         this.consecutiveJumps = 1;
         this.hasBeenHit = false;
+        this.isSliding = false;
         this.bounceVelocity = 250;
         this.setOrigin(0.5, 1);
         this.body.setSize(this.width - 8, this.height - 2);
         this.body.setOffset(6, 2);
         this.cursors = this.scene.input.keyboard.createCursorKeys();
         this.lastDirection = Phaser.Physics.Arcade.FACING_RIGHT;
-        
+
         this.projectiles = new Projectiles(this.scene, 'iceball-1');
         this.meleeWeapon = new MeleeWeapon(this.scene, 0, 0, 'sword-default');
         this.timeFromLastSwing = null;
-        
+
         this.health = 100;
         this.hp = new Healthbar(this.scene, this.scene.config.leftTopCorner.x + 5, this.scene.config.leftTopCorner.y + 5, this.health, 1.5);
-        
+
         this.body.setGravityY(this.gravity);
         this.setCollideWorldBounds(true);
         initAnimations(this.scene.anims);
-        
-        this.scene.input.keyboard.on('keydown-Q', () => {
-            this.play('throw', true);
-            this.projectiles.fireProjectile(this, 'iceball');
-        })
-        
-        this.scene.input.keyboard.on('keydown-E', () => {
-            if (this.timeFromLastSwing && this.timeFromLastSwing + this.meleeWeapon.attackSpeed > getTimestamp()) return;
-            this.play('throw', true);
-            this.meleeWeapon.attack(this);
-            this.timeFromLastSwing = getTimestamp();
-        })
+
+        this.handleAttacks();
+        this.handleMovements();
     }
 
     initEvents() {
@@ -63,8 +55,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     update() {
-        if (this.hasBeenHit) return;
-        const {left, right, space, up} = this.cursors;
+        if (this.hasBeenHit || this.isSliding) return;
+        const {left, right, space, up, down} = this.cursors;
         const isJumpButtonJustDown = Phaser.Input.Keyboard.JustDown(space) || Phaser.Input.Keyboard.JustDown(up);
         const onFloor = this.body.onFloor();
 
@@ -87,10 +79,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         if (onFloor)
             this.jumpCount = 0;
-        
-        if (this.isPlayingAnimations('throw'))
+
+        if (down.isDown) {
+            this.play('slide', true);
+        }
+
+        if (this.isPlayingAnimations('throw') || this.isPlayingAnimations('slide'))
             return;
-        
+
         onFloor ?
             this.body.velocity.x !== 0 ? this.play('run', true) : this.play('idle', true)
             : this.play('jump', true);
@@ -123,20 +119,42 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.health -= source.damage;
         this.hp.decrease(this.health);
-        source.deliversHit(this);
+        source.deliversHit && source.deliversHit(this);
 
         this.scene.time.delayedCall(1000, () => {
             this.hasBeenHit = false;
             hitAnimation.stop();
             this.clearTint();
         });
+    }
 
-        // this.scene.time.addEvent({
-        //     delay: 1000,
-        //     callback: () => {
-        //         this.hasBeenHit = false;
-        //     },
-        //     loop: false
-        // })
+    handleAttacks() {
+        this.scene.input.keyboard.on('keydown-Q', () => {
+            this.play('throw', true);
+            this.projectiles.fireProjectile(this, 'iceball');
+        });
+
+        this.scene.input.keyboard.on('keydown-E', () => {
+            if (this.timeFromLastSwing && this.timeFromLastSwing + this.meleeWeapon.attackSpeed > getTimestamp()) return;
+            this.play('throw', true);
+            this.meleeWeapon.attack(this);
+            this.timeFromLastSwing = getTimestamp();
+        });
+    }
+
+    handleMovements() {
+        this.scene.input.keyboard.on('keydown-DOWN', () => {
+            this.body.setSize(this.width, this.height / 2);
+            this.setOffset(0, this.height / 2);
+            this.setVelocityX(0)
+            this.play('slide', true);
+            this.isSliding = true;
+        });
+
+        this.scene.input.keyboard.on('keyup-DOWN', () => {
+            this.body.setSize(this.width, 38);
+            this.setOffset(0, 0);
+            this.isSliding = false;
+        });
     }
 }

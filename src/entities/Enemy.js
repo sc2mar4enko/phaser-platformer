@@ -84,6 +84,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.platformCollidersLayer = platformCollidersLayer;
     }
     
+    
     takesHit(source) {
         this.health -= source.damage;
         source.deliversHit(this);
