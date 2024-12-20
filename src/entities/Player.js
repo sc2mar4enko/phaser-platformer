@@ -3,6 +3,8 @@ import collidable from "../mixins/collidable";
 import Healthbar from "../hud/Healthbar";
 import Projectiles from "../attacks/Projectiles";
 import animations from "../mixins/animations";
+import MeleeWeapon from "../attacks/MeleeWeapon";
+import {getTimestamp} from "../utils/functions";
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
@@ -33,6 +35,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.lastDirection = Phaser.Physics.Arcade.FACING_RIGHT;
         
         this.projectiles = new Projectiles(this.scene);
+        this.meleeWeapon = new MeleeWeapon(this.scene, 0, 0, 'sword-default');
+        this.timeFromLastSwing = null;
         
         this.health = 100;
         this.hp = new Healthbar(this.scene, this.scene.config.leftTopCorner.x + 5, this.scene.config.leftTopCorner.y + 5, this.health, 1.5);
@@ -44,6 +48,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.scene.input.keyboard.on('keydown-Q', () => {
             this.play('throw', true);
             this.projectiles.fireProjectile(this);
+        })
+        
+        this.scene.input.keyboard.on('keydown-E', () => {
+            if (this.timeFromLastSwing && this.timeFromLastSwing + this.meleeWeapon.attackSpeed > getTimestamp()) return;
+            this.play('throw', true);
+            this.meleeWeapon.attack(this);
+            this.timeFromLastSwing = getTimestamp();
         })
     }
 
