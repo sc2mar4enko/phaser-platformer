@@ -18,7 +18,8 @@ class PlayScene extends Phaser.Scene {
         const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
         this.createPlayerColliders(player, {
             colliders: {
-                platformColliders: layers.platformColliders
+                platformColliders: layers.platformColliders,
+                projectiles: enemies.getProjectiles()
             }
         });
         this.createEnemyColliders(enemies, {
@@ -55,7 +56,9 @@ class PlayScene extends Phaser.Scene {
     }
 
     createPlayerColliders(player, {colliders}) {
-        player.addCollider(colliders.platformColliders);
+        player
+            .addCollider(colliders.platformColliders)
+            .addCollider(colliders.projectiles, this.onWeaponHit);
     }
 
     createEnemies(spawnLayer, platformColliders) {
