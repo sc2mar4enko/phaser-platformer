@@ -2,6 +2,8 @@
 import Player from "../entities/Player";
 import Enemies from "../groups/Enemies";
 import initGenericAnimations from "../animations/genericAnimations";
+import Collectable from "../collectables/Collectable";
+import Collectables from "../groups/Collectables";
 
 class PlayScene extends Phaser.Scene {
 
@@ -12,14 +14,16 @@ class PlayScene extends Phaser.Scene {
 
     create() {
         const map = this.createMap();
+        initGenericAnimations(this.anims);
         const layers = this.createLayers(map);
         const playerZones = this.getPlayerZones(layers.playerZones);
         const player = this.createPlayer(playerZones);
         const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
+        const collectables = this.createCollectables(layers.collectables);
         this.createPlayerColliders(player, {
             colliders: {
                 platformColliders: layers.platformColliders,
-                projectiles: enemies.getProjectiles()
+                projectiles: enemies.getProjectiles(), collectables
             }
         });
         this.createEnemyColliders(enemies, {
@@ -30,7 +34,6 @@ class PlayScene extends Phaser.Scene {
         });
         this.createEndOfLevel(playerZones, player);
         this.setupFollowupCameraOn(player);
-        initGenericAnimations(this.anims);
     }
 
     createMap() {
@@ -41,14 +44,15 @@ class PlayScene extends Phaser.Scene {
 
     createLayers(map) {
         const tileset = map.getTileset('main_lev_build_1')
-        const platformColliders = map.createStaticLayer('PlatformColliders', tileset);
-        const environment = map.createStaticLayer('Environment', tileset);
+        const platformColliders = map.createStaticLayer('PlatformColliders', tileset).setAlpha(0);
+        const environment = map.createStaticLayer('Environment', tileset).setDepth(-5);
         const platforms = map.createStaticLayer('Platforms', tileset);
         const playerZones = map.getObjectLayer('PlayerZones');
         const enemySpawns = map.getObjectLayer('EnemySpawns');
+        const collectables = map.getObjectLayer('Collectables');
 
         platformColliders.setCollisionByProperty({collides: true});
-        return {environment, platforms, platformColliders, playerZones, enemySpawns};
+        return {environment, platforms, platformColliders, playerZones, enemySpawns, collectables};
     }
 
     createPlayer(playerZones) {
@@ -58,7 +62,8 @@ class PlayScene extends Phaser.Scene {
     createPlayerColliders(player, {colliders}) {
         player
             .addCollider(colliders.platformColliders)
-            .addCollider(colliders.projectiles, this.onWeaponHit);
+            .addCollider(colliders.projectiles, this.onWeaponHit)
+            .addOverlap(colliders.collectables, this.onCollect);
     }
 
     createEnemies(spawnLayer, platformColliders) {
@@ -78,6 +83,14 @@ class PlayScene extends Phaser.Scene {
             .addCollider(colliders.player, this.onPlayerCollision)
             .addCollider(colliders.player.projectiles, this.onWeaponHit)
             .addOverlap(colliders.player.meleeWeapon, this.onWeaponHit);
+    }
+
+    createCollectables(collectableLayer) {
+        const collectables = new Collectables(this).setDepth(-1);
+        
+        collectables.addFromLayer(collectableLayer);
+        collectables.playAnimation('diamond-shine');
+        return collectables;
     }
 
     setupFollowupCameraOn(player) {
@@ -115,6 +128,10 @@ class PlayScene extends Phaser.Scene {
 
     onWeaponHit(entity, source) {
         entity.takesHit(source);
+    }
+
+    onCollect(entity, collectable) {
+        collectable.disableBody(true, true);
     }
 }
 
