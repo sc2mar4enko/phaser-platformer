@@ -5,6 +5,7 @@ import Projectiles from "../attacks/Projectiles";
 import animations from "../mixins/animations";
 import MeleeWeapon from "../attacks/MeleeWeapon";
 import {getTimestamp} from "../utils/functions";
+import EventEmitter from '../events/Emitter';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
@@ -39,7 +40,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.meleeWeapon = new MeleeWeapon(this.scene, 0, 0, 'sword-default');
         this.timeFromLastSwing = null;
 
-        this.health = 100;
+        this.health = 15;
         this.hp = new Healthbar(this.scene, this.scene.config.leftTopCorner.x + 5, this.scene.config.leftTopCorner.y + 5, this.health, 1.5);
 
         this.body.setGravityY(this.gravity);
@@ -55,7 +56,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     update() {
-        if (this.hasBeenHit || this.isSliding) return;
+        if (this.hasBeenHit || this.isSliding || !this.body) return;
+        if (this.getBounds().top > this.scene.config.height) {
+            EventEmitter.emit('PLAYER_LOSS');
+            return;
+        }
         const {left, right, space, up, down} = this.cursors;
         const isJumpButtonJustDown = Phaser.Input.Keyboard.JustDown(space) || Phaser.Input.Keyboard.JustDown(up);
         const onFloor = this.body.onFloor();
@@ -119,11 +124,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.hasBeenHit) {
             return;
         }
+        this.health -= source.damage || source.properties.damage || 0;
+        if (this.health <= 0) {
+            EventEmitter.emit('PLAYER_LOSS');
+            return;
+        }
+        
         this.hasBeenHit = true;
         this.bounceOff(source);
         const hitAnimation = this.playDamageTween();
-
-        this.health -= source.damage || source.properties.damage || 0;
+        
         this.hp.decrease(this.health);
         source.deliversHit && source.deliversHit(this);
 

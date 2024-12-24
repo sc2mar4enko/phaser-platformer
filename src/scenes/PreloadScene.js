@@ -19,6 +19,10 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('fireball-2', 'assets/weapons/improved_fireball_002.png');
         this.load.image('fireball-3', 'assets/weapons/improved_fireball_003.png');
         
+        this.load.image('background', 'assets/background03_super_dark.png');
+        this.load.image('backgroundSky', 'assets/background_0.png');
+        this.load.image('backgroundTileset', 'assets/bg_spikes_tileset.png');
+        
         
         this.load.image('diamond', 'assets/collectibles/diamond.png');
         

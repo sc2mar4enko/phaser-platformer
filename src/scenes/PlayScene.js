@@ -5,7 +5,7 @@ import initGenericAnimations from "../animations/genericAnimations";
 import Collectable from "../collectables/Collectable";
 import Collectables from "../groups/Collectables";
 import Hud from "../hud/Hud";
-
+import EventEmitter from "../events/Emitter";
 class PlayScene extends Phaser.Scene {
 
     constructor(config) {
@@ -13,7 +13,7 @@ class PlayScene extends Phaser.Scene {
         this.config = config;
     }
 
-    create() {
+    create(data) {
         const map = this.createMap();
         this.scoreHud = new Hud(this, 0, 0).setDepth(999);
         this.score = 0;
@@ -24,6 +24,7 @@ class PlayScene extends Phaser.Scene {
         const player = this.createPlayer(playerZones);
         const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
         const collectables = this.createCollectables(layers.collectables);
+        this.createBackground(map);
         this.createPlayerColliders(player, {
             colliders: {
                 platformColliders: layers.platformColliders,
@@ -40,17 +41,26 @@ class PlayScene extends Phaser.Scene {
         });
         this.createEndOfLevel(playerZones, player);
         this.setupFollowupCameraOn(player);
+        
+        if (data.gameStatus === 'PLAYER_LOSS') {
+            return;
+        }
+        
+        this.createGameEvents();
     }
 
     createMap() {
         const map = this.make.tilemap({key: 'map'});
         map.addTilesetImage('main_lev_build_1', 'tileset-1');
+        map.addTilesetImage('bg_spikes_tileset', 'backgroundTileset');
         return map;
     }
 
     createLayers(map) {
-        const tileset = map.getTileset('main_lev_build_1')
+        const tileset = map.getTileset('main_lev_build_1');
+        const tilesetBackground = map.getTileset('bg_spikes_tileset');
         const platformColliders = map.createStaticLayer('PlatformColliders', tileset).setAlpha(0);
+        const distanceLayer = map.createStaticLayer('Distance', tilesetBackground).setDepth(-6);
         const environment = map.createStaticLayer('Environment', tileset).setDepth(-5);
         const platforms = map.createStaticLayer('Platforms', tileset);
         const playerZones = map.getObjectLayer('PlayerZones');
@@ -144,6 +154,31 @@ class PlayScene extends Phaser.Scene {
         this.score += collectable.score;
         this.scoreHud.updateScoreboard(this.score);
         collectable.disableBody(true, true);
+    }
+
+    createGameEvents() {
+        EventEmitter.on('PLAYER_LOSS', () => {
+            this.scene.restart({gameStatus:'PLAYER_LOSS'});
+        })
+    }
+
+    createBackground(map) {
+        const background = map.getObjectLayer('DistanceBackground').objects[0];
+        this.spikesImage = this.add.tileSprite(background.x, background.y, this.config.width, background.height, 'background')
+            .setOrigin(0, 1)
+            .setDepth(-4444)
+            .setScrollFactor(0,1);
+        
+        this.skyImage = this.add.tileSprite(0, 0, this.config.width, 180, 'backgroundSky')
+            .setOrigin(0, 0 )
+            .setDepth(-4446)
+            .setScale(1.3)
+            .setScrollFactor(0,1);
+    }
+    
+    update() {
+        this.spikesImage.tilePositionX = this.cameras.main.scrollX * 0.5;
+        this.skyImage.tilePositionX = this.cameras.main.scrollX * 0.1;
     }
 }
 
