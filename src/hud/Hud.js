@@ -7,7 +7,7 @@ class Hud extends Phaser.GameObjects.Container {
         
         const { rightTopCorner } = scene.config;
         console.log(rightTopCorner);
-        this.setPosition(rightTopCorner.x - 220, rightTopCorner.y - 500);
+        this.setPosition(rightTopCorner.x - 35, rightTopCorner.y + 1);
         this.setScrollFactor(0); 
         this.setupList();
     }

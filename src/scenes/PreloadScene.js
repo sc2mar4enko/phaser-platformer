@@ -21,6 +21,8 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('fireball-3', 'assets/weapons/improved_fireball_003.png');
         
         this.load.image('background', 'assets/background03_super_dark.png');
+        this.load.image('back', 'assets/back.png');
+        this.load.image('menu-bg', 'assets/background01.png');
         this.load.image('backgroundSky', 'assets/background_0.png');
         this.load.image('backgroundTileset', 'assets/bg_spikes_tileset.png');
         
@@ -73,7 +75,8 @@ class PreloadScene extends Phaser.Scene {
     
     startGame() {
         this.registry.set('level', 1);
-        this.scene.start('PlayScene');
+        this.registry.set('unlocked-levels', 1);
+        this.scene.start('MenuScene');
     }
     // create() {
     //     this.scene.start('PlayScene');

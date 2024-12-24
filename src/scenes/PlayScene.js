@@ -39,6 +39,7 @@ class PlayScene extends Phaser.Scene {
                 player
             }
         });
+        this.createBackButton();
         this.createEndOfLevel(playerZones, player);
         this.setupFollowupCameraOn(player);
         
@@ -185,6 +186,18 @@ class PlayScene extends Phaser.Scene {
     update() {
         this.spikesImage.tilePositionX = this.cameras.main.scrollX * 0.5;
         this.skyImage.tilePositionX = this.cameras.main.scrollX * 0.1;
+    }
+
+    createBackButton() {
+        // console.log(this.config.rightTopCorner)
+        const btn = this.add.image(this.config.rightTopCorner.x - 5, this.config.rightTopCorner.y + 25, 'back')
+            .setOrigin(1, 1)
+            .setScrollFactor(0)
+            .setScale(1)
+            .setInteractive()
+        btn.on('pointerup', () => {
+            this.scene.start('MenuScene');
+        })
     }
 }
 
