@@ -8,7 +8,8 @@ class PreloadScene extends Phaser.Scene {
 
 
     preload() {
-        this.load.tilemapTiledJSON('map', 'assets/map.json');
+        this.load.tilemapTiledJSON('map1', 'assets/map.json');
+        this.load.tilemapTiledJSON('map2', 'assets/map2.json');
         this.load.image('tileset-1', 'assets/main_lev_build_1.png');
         this.load.image('tileset-2', 'assets/main_lev_build_2.png');
         
@@ -64,11 +65,19 @@ class PreloadScene extends Phaser.Scene {
             frameHeight: 38,
             spacing: 32
         });
+        
+        this.load.once('complete', () => {
+            this.startGame();
+        })
     }
-
-    create() {
+    
+    startGame() {
+        this.registry.set('level', 1);
         this.scene.start('PlayScene');
     }
+    // create() {
+    //     this.scene.start('PlayScene');
+    // }
 }
 
 export default PreloadScene;

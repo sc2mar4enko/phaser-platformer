@@ -13,7 +13,7 @@ class PlayScene extends Phaser.Scene {
         this.config = config;
     }
 
-    create(data) {
+    create({gameStatus}) {
         const map = this.createMap();
         this.scoreHud = new Hud(this, 0, 0).setDepth(999);
         this.score = 0;
@@ -42,7 +42,7 @@ class PlayScene extends Phaser.Scene {
         this.createEndOfLevel(playerZones, player);
         this.setupFollowupCameraOn(player);
         
-        if (data.gameStatus === 'PLAYER_LOSS') {
+        if ({gameStatus} === 'PLAYER_LOSS') {
             return;
         }
         
@@ -50,7 +50,7 @@ class PlayScene extends Phaser.Scene {
     }
 
     createMap() {
-        const map = this.make.tilemap({key: 'map'});
+        const map = this.make.tilemap({key: `map${this.getCurrentLevel()}`});
         map.addTilesetImage('main_lev_build_1', 'tileset-1');
         map.addTilesetImage('bg_spikes_tileset', 'backgroundTileset');
         return map;
@@ -128,6 +128,10 @@ class PlayScene extends Phaser.Scene {
             rofl: playerZones.find(zone => zone.name === 'Pasxalka')
         }
     }
+    
+    getCurrentLevel() {
+        return this.registry.get('level') || 1;
+    }
 
     createEndOfLevel(playerZones, player) {
         const endOfLevel = this.physics.add.sprite(playerZones.end.x, playerZones.end.y, 'end')
@@ -138,6 +142,8 @@ class PlayScene extends Phaser.Scene {
         const endOfLevelOverlap = this.physics.add.overlap(player, endOfLevel, () => {
             endOfLevelOverlap.active = false;
             this.add.text(player.body.x + 50, player.body.y - 15, playerZones.rofl.text.text);
+            this.registry.inc('level', 1);
+            this.scene.restart({gameStatus: 'LEVEL_COMPLETED'});
         })
     }
 
