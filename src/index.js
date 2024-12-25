@@ -4,11 +4,13 @@ import PreloadScene from "./scenes/PreloadScene";
 import MenuScene from "./scenes/MenuScene";
 import BaseScene from "./scenes/BaseScene";
 import LevelsScene from "./scenes/LevelsScene";
+import CreditsScene from "./scenes/CreditsScene";
 
 const MAP_WIDTH = 1600;
 const WIDTH = document.body.offsetWidth;
 const HEIGHT = 600;
 const ZOOM_FACTOR = 1.5;
+const LAST_LEVEL = 2;
 
 let SHARED_CONFIG = {
   mapOffset: MAP_WIDTH > WIDTH ? MAP_WIDTH - WIDTH : 0,
@@ -27,10 +29,11 @@ let SHARED_CONFIG = {
   rightBottomCorner: {
     x: ((WIDTH / ZOOM_FACTOR) + ((WIDTH - (WIDTH / ZOOM_FACTOR)) / 2)),
     y: ((HEIGHT / ZOOM_FACTOR) + ((HEIGHT - (HEIGHT / ZOOM_FACTOR)) / 2)),
-  }
+  },
+  lastLevel: LAST_LEVEL
 }
 
-const scenes = [PreloadScene, MenuScene, LevelsScene, PlayScene];
+const scenes = [PreloadScene, MenuScene, LevelsScene, PlayScene, CreditsScene];
 const createScene = Scene => new Scene(SHARED_CONFIG)
 const initScenes = () => scenes.map(createScene)
 

@@ -40,7 +40,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.meleeWeapon = new MeleeWeapon(this.scene, 0, 0, 'sword-default');
         this.timeFromLastSwing = null;
 
-        this.health = 15;
+        this.health = 150;
         this.hp = new Healthbar(this.scene, this.scene.config.leftTopCorner.x + 5, this.scene.config.leftTopCorner.y + 5, this.health, 1.5);
 
         this.body.setGravityY(this.gravity);
