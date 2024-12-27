@@ -16,7 +16,7 @@ class PlayScene extends Phaser.Scene {
     create({gameStatus}) {
         const map = this.createMap();
         this.scoreHud = new Hud(this, 0, 0).setDepth(999);
-        this.score = 0;
+        this.score = Number(localStorage.getItem('currentScore'));
         
         initGenericAnimations(this.anims);
         const layers = this.createLayers(map);
@@ -162,9 +162,9 @@ class PlayScene extends Phaser.Scene {
     }
 
     onCollect(entity, collectable) {
-        console.log(collectable)
         this.score += collectable.score;
-        this.scoreHud.updateScoreboard(this.score);
+        this.scoreHud.updateScoreboard();
+        localStorage.setItem(('currentScore'), this.score.toString());
         collectable.disableBody(true, true);
     }
 

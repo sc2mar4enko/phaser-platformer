@@ -17,19 +17,19 @@ class Hud extends Phaser.GameObjects.Container {
     }
     
     createScoreboard() {
-        const scoreText = this.scene.add.text(0, 0, '0', {fontSize: `${this.fontSize}px`, fill: '#ffffff'});
+        const scoreText = this.scene.add.text(0, 0, localStorage.getItem('currentScore'), {fontSize: `${this.fontSize}px`, fill: '#ffffff'});
         const scoreImage = this.scene.add.image(scoreText.width + 5, 15, 'diamond').setOrigin(0, 0.7).setScale(1);
         const scoreBoard = this.scene.add.container(-36,0, [scoreText, scoreImage]);
         scoreBoard.setName('scoreBoard');
         return scoreBoard
     }
     
-    updateScoreboard(score) {
+    updateScoreboard() {
         const [scoreText, scoreImage] = this.getByName('scoreBoard').list;
-        scoreText.setText(score);
+        scoreText.setText(localStorage.getItem('currentScore'));
         scoreImage.setX(scoreText.width + 5);
-        if (Number(localStorage.getItem('maxScore') <= score)) {
-            localStorage.setItem('maxScore', scoreText.text);
+        if (Number(localStorage.getItem('maxScore') <= Number(localStorage.getItem('currentScore')))) {
+            localStorage.setItem('maxScore', localStorage.getItem('currentScore'));
             console.log(localStorage.getItem('maxScore'));
         }
     }

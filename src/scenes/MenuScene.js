@@ -30,6 +30,9 @@ class MenuScene extends BaseScene {
             if (menuItem.text === 'Exit') {
                 this.game.destroy(true);
             }
+            if (menuItem.text === 'Play') {
+                localStorage.setItem('currentScore', '0');
+            }
         })
     }
 
