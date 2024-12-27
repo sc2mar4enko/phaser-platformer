@@ -22,6 +22,7 @@ class PlayScene extends Phaser.Scene {
         const layers = this.createLayers(map);
         const playerZones = this.getPlayerZones(layers.playerZones);
         const player = this.createPlayer(playerZones);
+        this.player = player;
         const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
         const collectables = this.createCollectables(layers.collectables);
         this.createBackground(map);
@@ -47,6 +48,7 @@ class PlayScene extends Phaser.Scene {
             return;
         }
         
+        this.emitRofls();
         this.createGameEvents();
     }
 
@@ -172,6 +174,12 @@ class PlayScene extends Phaser.Scene {
         EventEmitter.on('PLAYER_LOSS', () => {
             this.scene.restart({gameStatus:'PLAYER_LOSS'});
         })
+        EventEmitter.on('ROFLS', () => {
+            const rofl = this.add.text(this.player.x, this.player.y - 50, 'homo bomba');
+            this.time.delayedCall(500, () => {
+                rofl.setText('');
+            })
+        })
     }
 
     createBackground(map) {
@@ -204,6 +212,10 @@ class PlayScene extends Phaser.Scene {
             this.scene.start('MenuScene');
             this.scene.stop();
         })
+    }
+
+    emitRofls() {
+        document.getElementById('event-button').addEventListener('click', () => EventEmitter.emit('ROFLS'));
     }
 }
 
