@@ -1,4 +1,4 @@
-export default function initAnimations(anims) {
+export default function initPlayerAnimations(anims) {
     anims.create({
         key: 'run',
         frames: anims.generateFrameNames('player', {start: 11, end: 16}),

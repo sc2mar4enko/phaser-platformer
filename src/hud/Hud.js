@@ -28,6 +28,10 @@ class Hud extends Phaser.GameObjects.Container {
         const [scoreText, scoreImage] = this.getByName('scoreBoard').list;
         scoreText.setText(score);
         scoreImage.setX(scoreText.width + 5);
+        if (Number(localStorage.getItem('maxScore') <= score)) {
+            localStorage.setItem('maxScore', scoreText.text);
+            console.log(localStorage.getItem('maxScore'));
+        }
     }
 }
 export default Hud;

@@ -1,4 +1,4 @@
-import initAnimations from "../animations/playerAnimations";
+import initPlayerAnimations from "../animations/playerAnimations";
 import collidable from "../mixins/collidable";
 import Healthbar from "../hud/Healthbar";
 import Projectiles from "../attacks/Projectiles";
@@ -6,6 +6,7 @@ import animations from "../mixins/animations";
 import MeleeWeapon from "../attacks/MeleeWeapon";
 import {getTimestamp} from "../utils/functions";
 import EventEmitter from '../events/Emitter';
+import initPlayer2Animations from "../animations/player2Animations";
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
@@ -31,8 +32,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.isSliding = false;
         this.bounceVelocity = 250;
         this.setOrigin(0.5, 1);
-        this.body.setSize(this.width - 8, this.height - 2);
-        this.body.setOffset(6, 2);
+
         this.cursors = this.scene.input.keyboard.createCursorKeys();
         this.lastDirection = Phaser.Physics.Arcade.FACING_RIGHT;
 
@@ -45,8 +45,22 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.body.setGravityY(this.gravity);
         this.setCollideWorldBounds(true);
-        initAnimations(this.scene.anims);
-
+        console.log(this.scene.anims);
+        if (localStorage.getItem('skin') === "2") {
+            this.removeAllAnims();
+            initPlayer2Animations(this.scene.anims);
+            this.body.setSize(this.width - 16, this.height - 16);
+            this.setScale(1.5);
+            this.body.setOffset(8, 4);
+        }
+        else {
+            this.removeAllAnims();
+            initPlayerAnimations(this.scene.anims);
+            this.setScale(1);
+            this.body.setSize(this.width - 8, this.height - 2);
+            this.body.setOffset(6, 2);
+        }
+        console.log(localStorage.getItem('skin'))
         this.handleAttacks();
         this.handleMovements();
     }
@@ -172,5 +186,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.setOffset(0, 0);
             this.isSliding = false;
         });
+    }
+
+    removeAllAnims() {
+        this.scene.anims.remove('run');
+        this.scene.anims.remove('idle');
+        this.scene.anims.remove('jump');
+        this.scene.anims.remove('throw');
+        this.scene.anims.remove('slide');
     }
 }

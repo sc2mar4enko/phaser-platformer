@@ -202,6 +202,7 @@ class PlayScene extends Phaser.Scene {
             .setInteractive()
         btn.on('pointerup', () => {
             this.scene.start('MenuScene');
+            this.scene.stop();
         })
     }
 }

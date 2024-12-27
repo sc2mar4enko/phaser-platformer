@@ -38,6 +38,14 @@ class PreloadScene extends Phaser.Scene {
             frameHeight: 38,
             spacing: 32
         });
+        this.load.spritesheet('player2', 'assets/player/cute-player.png', {
+           frameWidth: 32,
+           frameHeight: 32
+        });
+        this.load.spritesheet('player2-actions', 'assets/player/cute-player-actions.png', {
+           frameWidth: 48,
+           frameHeight: 48
+        });
         this.load.spritesheet('birdman', 'assets/enemy/enemy_sheet.png', {
             frameWidth: 32,
             frameHeight: 64,
@@ -70,7 +78,8 @@ class PreloadScene extends Phaser.Scene {
         
         this.load.once('complete', () => {
             this.startGame();
-        })
+        });
+        localStorage.setItem('skin', "1");
     }
     
     startGame() {
