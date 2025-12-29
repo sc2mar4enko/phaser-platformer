@@ -13,7 +13,7 @@ class PlayScene extends Phaser.Scene {
         this.config = config;
     }
 
-    create({gameStatus}) {
+    create({gameStatus} = {}) {
         const map = this.createMap();
         this.scoreHud = new Hud(this, 0, 0).setDepth(999);
         this.score = Number(localStorage.getItem('currentScore'));
@@ -21,8 +21,10 @@ class PlayScene extends Phaser.Scene {
         initGenericAnimations(this.anims);
         const layers = this.createLayers(map);
         const playerZones = this.getPlayerZones(layers.playerZones);
+        this.respawnPoint = {x: playerZones.start.x, y: playerZones.start.y};
         const player = this.createPlayer(playerZones);
         this.player = player;
+        this.checkpointZones = this.createCheckpoints(map);
         const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
         const collectables = this.createCollectables(layers.collectables);
         this.createBackground(map);
@@ -43,8 +45,9 @@ class PlayScene extends Phaser.Scene {
         this.createBackButton();
         this.createEndOfLevel(playerZones, player);
         this.setupFollowupCameraOn(player);
+        this.createCheckpointOverlaps(player);
         
-        if ({gameStatus} === 'PLAYER_LOSS') {
+        if (gameStatus === 'PLAYER_LOSS') {
             return;
         }
         
@@ -115,6 +118,35 @@ class PlayScene extends Phaser.Scene {
         return collectables;
     }
 
+    createCheckpoints(map) {
+        const checkpointLayer = map.getObjectLayer('Checkpoints');
+        if (!checkpointLayer) {
+            return [];
+        }
+        return checkpointLayer.objects
+            .filter((checkpoint) => checkpoint.type === 'checkpoint' || checkpoint.name === 'checkpoint')
+            .map((checkpoint) => {
+                const zone = this.add.zone(checkpoint.x, checkpoint.y, checkpoint.width || 16, checkpoint.height || 16);
+                this.physics.add.existing(zone, true);
+                zone.setData('activated', false);
+                const marker = this.add.image(checkpoint.x, checkpoint.y, 'diamond')
+                    .setOrigin(0.5, 1)
+                    .setScale(0.6)
+                    .setAlpha(0.4);
+                zone.setData('marker', marker);
+                return zone;
+            });
+    }
+
+    createCheckpointOverlaps(player) {
+        if (!this.checkpointZones || this.checkpointZones.length === 0) {
+            return;
+        }
+        this.checkpointZones.forEach((zone) => {
+            this.physics.add.overlap(player, zone, () => this.activateCheckpoint(zone));
+        });
+    }
+
     setupFollowupCameraOn(player) {
         const {height, width, mapOffset, zoomFactor} = this.config;
         this.physics.world.setBounds(0, 0, width + mapOffset, height + 100);
@@ -150,7 +182,7 @@ class PlayScene extends Phaser.Scene {
                 return;
             }
             this.registry.inc('level', 1);
-            this.registry.inc('unlocked-level', 1);
+            this.registry.inc('unlocked-levels', 1);
             this.scene.restart({gameStatus: 'LEVEL_COMPLETED'});
         })
     }
@@ -170,9 +202,31 @@ class PlayScene extends Phaser.Scene {
         collectable.disableBody(true, true);
     }
 
+    activateCheckpoint(zone) {
+        if (zone.getData('activated')) {
+            return;
+        }
+        zone.setData('activated', true);
+        this.respawnPoint = {x: zone.x, y: zone.y};
+        const marker = zone.getData('marker');
+        if (marker) {
+            marker.setAlpha(1);
+        }
+    }
+
+    respawnPlayer() {
+        const {x, y} = this.respawnPoint;
+        this.player.setPosition(x, y);
+        this.player.setVelocity(0, 0);
+        this.player.clearTint();
+        this.player.hasBeenHit = false;
+        this.player.health = this.player.maxHealth;
+        this.player.hp.decrease(this.player.health);
+    }
+
     createGameEvents() {
         EventEmitter.on('PLAYER_LOSS', () => {
-            this.scene.restart({gameStatus:'PLAYER_LOSS'});
+            this.respawnPlayer();
         })
         EventEmitter.on('ROFLS', () => {
             const rofl = this.add.text(this.player.x, this.player.y - 50, 'homo bomba');
@@ -215,7 +269,18 @@ class PlayScene extends Phaser.Scene {
     }
 
     emitRofls() {
-        document.getElementById('event-button').addEventListener('click', () => EventEmitter.emit('ROFLS'));
+        const button = document.getElementById('event-button');
+        if (!button) {
+            return;
+        }
+        if (!this.roflHandler) {
+            this.roflHandler = () => EventEmitter.emit('ROFLS');
+        }
+        button.removeEventListener('click', this.roflHandler);
+        button.addEventListener('click', this.roflHandler);
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            button.removeEventListener('click', this.roflHandler);
+        });
     }
 }
 

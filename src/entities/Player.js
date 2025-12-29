@@ -29,6 +29,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.jumpCount = 0;
         this.consecutiveJumps = 1;
         this.hasBeenHit = false;
+        this.isInvincible = false;
+        this.invincibleUntil = 0;
+        this.blinkUntil = 0;
+        this.blinkInterval = 100;
+        this.hitRecoveryUntil = 0;
+        this.hitAnimation = null;
         this.isSliding = false;
         this.bounceVelocity = 250;
         this.setOrigin(0.5, 1);
@@ -40,12 +46,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.meleeWeapon = new MeleeWeapon(this.scene, 0, 0, 'sword-default');
         this.timeFromLastSwing = null;
 
-        this.health = 150;
+        this.maxHealth = 150;
+        this.health = this.maxHealth;
         this.hp = new Healthbar(this.scene, this.scene.config.leftTopCorner.x + 5, this.scene.config.leftTopCorner.y + 5, this.health, 1.5);
 
         this.body.setGravityY(this.gravity);
         this.setCollideWorldBounds(true);
-        console.log(this.scene.anims);
         if (localStorage.getItem('skin') === "2") {
             this.removeAllAnims();
             initPlayer2Animations(this.scene.anims);
@@ -60,16 +66,22 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.body.setSize(this.width - 8, this.height - 2);
             this.body.setOffset(6, 2);
         }
-        console.log(localStorage.getItem('skin'))
         this.handleAttacks();
         this.handleMovements();
     }
 
     initEvents() {
         this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.update, this);
+        this.once(Phaser.GameObjects.Events.DESTROY, () => {
+            if (this.hitAnimation) {
+                this.hitAnimation.stop();
+                this.hitAnimation = null;
+            }
+        });
     }
 
     update() {
+        this.updateDamageState();
         if (this.hasBeenHit || this.isSliding || !this.body) return;
         if (this.getBounds().top > this.scene.config.height) {
             EventEmitter.emit('PLAYER_LOSS');
@@ -135,7 +147,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     takesHit(source) {
-        if (this.hasBeenHit) {
+        if (this.hasBeenHit || this.isInvincible) {
             return;
         }
         this.health -= source.damage || source.properties.damage || 0;
@@ -146,16 +158,46 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
         this.hasBeenHit = true;
         this.bounceOff(source);
-        const hitAnimation = this.playDamageTween();
+        this.hitAnimation = this.playDamageTween();
         
         this.hp.decrease(this.health);
         source.deliversHit && source.deliversHit(this);
+        this.startInvincibility();
+    }
 
-        this.scene.time.delayedCall(1000, () => {
+    startInvincibility() {
+        this.isInvincible = true;
+        const now = this.scene.time.now;
+        this.invincibleUntil = now + 800;
+        this.blinkUntil = now + this.blinkInterval;
+        this.hitRecoveryUntil = now + 1000;
+    }
+
+    endInvincibility() {
+        this.isInvincible = false;
+        this.alpha = 1;
+        this.invincibleUntil = 0;
+        this.blinkUntil = 0;
+    }
+
+    updateDamageState() {
+        const now = this.scene.time.now;
+        if (this.isInvincible) {
+            if (now >= this.invincibleUntil) {
+                this.endInvincibility();
+            } else if (now >= this.blinkUntil) {
+                this.alpha = this.alpha === 1 ? 0.4 : 1;
+                this.blinkUntil = now + this.blinkInterval;
+            }
+        }
+        if (this.hasBeenHit && now >= this.hitRecoveryUntil) {
             this.hasBeenHit = false;
-            hitAnimation.stop();
+            if (this.hitAnimation) {
+                this.hitAnimation.stop();
+                this.hitAnimation = null;
+            }
             this.clearTint();
-        });
+        }
     }
 
     handleAttacks() {
