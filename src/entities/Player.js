@@ -30,8 +30,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.consecutiveJumps = 1;
         this.hasBeenHit = false;
         this.isInvincible = false;
-        this.invincibleTimer = null;
-        this.blinkTimer = null;
+        this.invincibleUntil = 0;
+        this.blinkUntil = 0;
+        this.blinkInterval = 100;
+        this.hitRecoveryUntil = 0;
+        this.hitAnimation = null;
         this.isSliding = false;
         this.bounceVelocity = 250;
         this.setOrigin(0.5, 1);
@@ -69,9 +72,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     initEvents() {
         this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.update, this);
+        this.once(Phaser.GameObjects.Events.DESTROY, () => {
+            if (this.hitAnimation) {
+                this.hitAnimation.stop();
+                this.hitAnimation = null;
+            }
+        });
     }
 
     update() {
+        this.updateDamageState();
         if (this.hasBeenHit || this.isSliding || !this.body) return;
         if (this.getBounds().top > this.scene.config.height) {
             EventEmitter.emit('PLAYER_LOSS');
@@ -148,52 +158,45 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
         this.hasBeenHit = true;
         this.bounceOff(source);
-        const hitAnimation = this.playDamageTween();
+        this.hitAnimation = this.playDamageTween();
         
         this.hp.decrease(this.health);
         source.deliversHit && source.deliversHit(this);
         this.startInvincibility();
-
-        this.scene.time.delayedCall(1000, () => {
-            this.hasBeenHit = false;
-            hitAnimation.stop();
-            this.clearTint();
-        });
     }
 
     startInvincibility() {
         this.isInvincible = true;
-        if (this.blinkTimer) {
-            this.blinkTimer.remove(false);
-        }
-        if (this.invincibleTimer) {
-            this.invincibleTimer.remove(false);
-        }
-        this.blinkTimer = this.scene.time.addEvent({
-            delay: 100,
-            loop: true,
-            callback: () => {
-                this.alpha = this.alpha === 1 ? 0.4 : 1;
-            }
-        });
-        this.invincibleTimer = this.scene.time.delayedCall(800, () => {
-            this.endInvincibility();
-        });
-        this.once(Phaser.GameObjects.Events.DESTROY, () => {
-            this.endInvincibility();
-        });
+        const now = this.scene.time.now;
+        this.invincibleUntil = now + 800;
+        this.blinkUntil = now + this.blinkInterval;
+        this.hitRecoveryUntil = now + 1000;
     }
 
     endInvincibility() {
         this.isInvincible = false;
         this.alpha = 1;
-        if (this.blinkTimer) {
-            this.blinkTimer.remove(false);
-            this.blinkTimer = null;
+        this.invincibleUntil = 0;
+        this.blinkUntil = 0;
+    }
+
+    updateDamageState() {
+        const now = this.scene.time.now;
+        if (this.isInvincible) {
+            if (now >= this.invincibleUntil) {
+                this.endInvincibility();
+            } else if (now >= this.blinkUntil) {
+                this.alpha = this.alpha === 1 ? 0.4 : 1;
+                this.blinkUntil = now + this.blinkInterval;
+            }
         }
-        if (this.invincibleTimer) {
-            this.invincibleTimer.remove(false);
-            this.invincibleTimer = null;
+        if (this.hasBeenHit && now >= this.hitRecoveryUntil) {
+            this.hasBeenHit = false;
+            if (this.hitAnimation) {
+                this.hitAnimation.stop();
+                this.hitAnimation = null;
+            }
+            this.clearTint();
         }
     }
 
