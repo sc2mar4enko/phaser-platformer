@@ -6,7 +6,6 @@ class Hud extends Phaser.GameObjects.Container {
         this.fontSize = 20;
         
         const { rightTopCorner } = scene.config;
-        console.log(rightTopCorner);
         this.setPosition(rightTopCorner.x - 35, rightTopCorner.y + 1);
         this.setScrollFactor(0); 
         this.setupList();
@@ -28,9 +27,8 @@ class Hud extends Phaser.GameObjects.Container {
         const [scoreText, scoreImage] = this.getByName('scoreBoard').list;
         scoreText.setText(localStorage.getItem('currentScore'));
         scoreImage.setX(scoreText.width + 5);
-        if (Number(localStorage.getItem('maxScore') <= Number(localStorage.getItem('currentScore')))) {
+        if (Number(localStorage.getItem('maxScore')) <= Number(localStorage.getItem('currentScore'))) {
             localStorage.setItem('maxScore', localStorage.getItem('currentScore'));
-            console.log(localStorage.getItem('maxScore'));
         }
     }
 }

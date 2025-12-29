@@ -15,6 +15,7 @@ class MenuScene extends BaseScene {
         this.createMenu(this.menu, this.setupMenuEvents.bind(this));
         this.createSkins();
         this.createHighscore();
+        this.setupSkinEvents();
     }
     setupMenuEvents(menuItem) {
         const textGO = menuItem.textGO;
@@ -55,19 +56,20 @@ class MenuScene extends BaseScene {
         this.add.image(hsText.getBounds().right + 8, 150, 'diamond').setScale(2).setOrigin(0, 0);
     }
     
-    update() {
+    setupSkinEvents() {
         this.player1.on('pointerup', () => {
             this.player1.setTint(0xfffff);
-            if (this.player2Available)
+            if (this.player2Available) {
                 this.player2.clearTint();
+            }
             localStorage.setItem('skin', "1");
-        })
+        });
 
         this.player2.on('pointerup', () => {
             this.player2.setTint(0xfffff);
             this.player1.clearTint();
             localStorage.setItem('skin', "2");
-        })
+        });
     }
 }
 export default MenuScene;
