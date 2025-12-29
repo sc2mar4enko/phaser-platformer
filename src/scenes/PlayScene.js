@@ -26,6 +26,7 @@ class PlayScene extends Phaser.Scene {
         this.player = player;
         this.checkpointZones = this.createCheckpoints(map);
         const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
+        player.setEnemyGroup(enemies);
         const collectables = this.createCollectables(layers.collectables);
         this.createBackground(map);
         this.createPlayerColliders(player, {
@@ -107,6 +108,7 @@ class PlayScene extends Phaser.Scene {
             .addCollider(colliders.platformColliders)
             .addCollider(colliders.player, this.onPlayerCollision)
             .addCollider(colliders.player.projectiles, this.onHit)
+            .addCollider(colliders.player.arcProjectiles, this.onHit)
             .addOverlap(colliders.player.meleeWeapon, this.onHit);
     }
 

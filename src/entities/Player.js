@@ -2,6 +2,7 @@ import initPlayerAnimations from "../animations/playerAnimations";
 import collidable from "../mixins/collidable";
 import Healthbar from "../hud/Healthbar";
 import Projectiles from "../attacks/Projectiles";
+import ArcProjectiles from "../attacks/ArcProjectiles";
 import animations from "../mixins/animations";
 import MeleeWeapon from "../attacks/MeleeWeapon";
 import {getTimestamp} from "../utils/functions";
@@ -43,12 +44,21 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.lastDirection = Phaser.Physics.Arcade.FACING_RIGHT;
 
         this.projectiles = new Projectiles(this.scene, 'iceball-1');
+        this.arcProjectiles = new ArcProjectiles(this.scene, 'iceball-1');
         this.meleeWeapon = new MeleeWeapon(this.scene, 0, 0, 'sword-default');
         this.timeFromLastSwing = null;
 
         this.maxHealth = 150;
         this.health = this.maxHealth;
         this.hp = new Healthbar(this.scene, this.scene.config.leftTopCorner.x + 5, this.scene.config.leftTopCorner.y + 5, this.health, 1.5);
+
+        this.enemyGroup = null;
+        this.laserGraphics = this.scene.add.graphics({lineStyle: {width: 2, color: 0xff2d2d, alpha: 0.9}});
+        this.laserGraphics.setDepth(20);
+        this.laserTarget = null;
+        this.isChargingLaser = false;
+        this.laserChargeEvent = null;
+        this.laserChargeDuration = 2000;
 
         this.body.setGravityY(this.gravity);
         this.setCollideWorldBounds(true);
@@ -77,11 +87,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                 this.hitAnimation.stop();
                 this.hitAnimation = null;
             }
+            this.clearLaser();
         });
     }
 
     update() {
         this.updateDamageState();
+        this.updateLaser();
         if (this.hasBeenHit || this.isSliding || !this.body) return;
         if (this.getBounds().top > this.scene.config.height) {
             EventEmitter.emit('PLAYER_LOSS');
@@ -202,8 +214,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     handleAttacks() {
         this.scene.input.keyboard.on('keydown-Q', () => {
+            if (this.isChargingLaser) {
+                return;
+            }
+            const target = this.getNearestEnemy();
+            if (!target) {
+                return;
+            }
             this.play('throw', true);
-            this.projectiles.fireProjectile(this, 'iceball');
+            this.startLaserCharge(target);
         });
 
         this.scene.input.keyboard.on('keydown-E', () => {
@@ -236,5 +255,73 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.scene.anims.remove('jump');
         this.scene.anims.remove('throw');
         this.scene.anims.remove('slide');
+    }
+
+    setEnemyGroup(enemyGroup) {
+        this.enemyGroup = enemyGroup;
+    }
+
+    getNearestEnemy() {
+        if (!this.enemyGroup) {
+            return null;
+        }
+        const candidates = this.enemyGroup.getChildren().filter((enemy) => enemy.active && enemy.body);
+        if (candidates.length === 0) {
+            return null;
+        }
+        const {x, y} = this.getCenter();
+        let nearest = candidates[0];
+        let minDistance = Phaser.Math.Distance.Between(x, y, nearest.x, nearest.y);
+        candidates.slice(1).forEach((enemy) => {
+            const distance = Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearest = enemy;
+            }
+        });
+        return nearest;
+    }
+
+    startLaserCharge(target) {
+        this.isChargingLaser = true;
+        this.laserTarget = target;
+        this.laserChargeEvent = this.scene.time.delayedCall(this.laserChargeDuration, () => {
+            if (!this.laserTarget || !this.laserTarget.active) {
+                this.clearLaser();
+                return;
+            }
+            this.arcProjectiles.fireProjectile(this, this.laserTarget, 'iceball', {
+                flightTime: 700,
+                gravityY: 500
+            });
+            this.clearLaser();
+        });
+    }
+
+    updateLaser() {
+        if (!this.isChargingLaser) {
+            return;
+        }
+        if (!this.laserTarget || !this.laserTarget.active) {
+            this.clearLaser();
+            return;
+        }
+        const start = this.getCenter();
+        const end = this.laserTarget.getCenter ? this.laserTarget.getCenter() : this.laserTarget;
+        this.laserGraphics.clear();
+        this.laserGraphics.lineStyle(2, 0xff2d2d, 0.9);
+        this.laserGraphics.strokeLineShape(new Phaser.Geom.Line(start.x, start.y, end.x, end.y));
+    }
+
+    clearLaser() {
+        if (this.laserChargeEvent) {
+            this.laserChargeEvent.remove(false);
+            this.laserChargeEvent = null;
+        }
+        this.isChargingLaser = false;
+        this.laserTarget = null;
+        if (this.laserGraphics) {
+            this.laserGraphics.clear();
+        }
     }
 }
