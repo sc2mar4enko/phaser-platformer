@@ -31,8 +31,8 @@ export default class ArcProjectile extends Phaser.Physics.Arcade.Sprite {
     }
 
     fireArc(x, y, target, anim, config = {}) {
-        const gravityY = config.gravityY ?? this.gravityY;
-        const flightTime = (config.flightTime ?? this.flightTime) / 1000;
+        const gravityY = config.gravityY !== undefined ? config.gravityY : this.gravityY;
+        const flightTime = (config.flightTime !== undefined ? config.flightTime : this.flightTime) / 1000;
         const targetPoint = target.getCenter ? target.getCenter() : target;
         const dx = targetPoint.x - x;
         const dy = targetPoint.y - y;
